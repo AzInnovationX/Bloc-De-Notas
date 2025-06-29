@@ -1,10 +1,21 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class=""> <!-- Se añade la clase aquí, JS la manejará -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bloc De Notas</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Configuración de Tailwind para modo oscuro manual
+      tailwind.config = {
+        darkMode: 'class', // Habilita el modo oscuro basado en una clase en el elemento HTML
+        theme: {
+          extend: {
+            // Puedes extender colores si es necesario para el modo oscuro aquí
+          }
+        }
+      }
+    </script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
     <!-- Firebase SDKs -->
@@ -12,28 +23,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
     <style>
-        /* Custom styles if needed, e.g., for line-clamp */
-        .line-clamp-3 {
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 3;
-        }
-        .line-clamp-2 {
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-        }
-        .line-clamp-1 {
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 1;
-        }
+        /* Custom styles if needed */
+        .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+        .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+        .lucide { width: 1em; height: 1em; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-700 font-sans">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-sans transition-colors duration-300">
     <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-3 w-full max-w-xs sm:max-w-sm">
         <!-- Toasts will be injected here -->
     </div>
@@ -41,25 +38,33 @@
     <div class="min-h-screen p-4 md:p-6 lg:p-8">
       <div class="max-w-6xl mx-auto">
         <!-- Header -->
-        <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
-          <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 mb-1">Bloc De Notas</h1>
-          <p class="text-gray-500 text-base sm:text-lg">Gestiona tus notas y cuentas de manera profesional</p>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 mb-8 transition-colors duration-300">
+          <div class="flex justify-between items-center">
+            <div>
+              <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1 transition-colors duration-300">Bloc De Notas</h1>
+              <p class="text-gray-500 dark:text-gray-400 text-base sm:text-lg transition-colors duration-300">Gestiona tus notas y cuentas de manera profesional</p>
+            </div>
+            <button id="theme-toggle" class="p-2 rounded-md text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors duration-300">
+              <i id="theme-toggle-dark-icon" data-lucide="moon" class="w-6 h-6 hidden lucide"></i>
+              <i id="theme-toggle-light-icon" data-lucide="sun" class="w-6 h-6 hidden lucide"></i>
+            </button>
+          </div>
         </div>
 
         <!-- Tabs -->
         <div class="flex space-x-2 mb-8">
           <button
             id="tab-notes"
-            class="flex items-center px-4 py-2 rounded-md font-semibold text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            class="flex items-center px-4 py-2 rounded-md font-semibold text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-opacity-50"
           >
-            <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+            <i data-lucide="file-text" class="w-5 h-5 mr-2 lucide"></i>
             Notas
           </button>
           <button
             id="tab-accounts"
-            class="flex items-center px-4 py-2 rounded-md font-semibold text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            class="flex items-center px-4 py-2 rounded-md font-semibold text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-opacity-50"
           >
-            <i data-lucide="calculator" class="w-5 h-5 mr-2"></i>
+            <i data-lucide="calculator" class="w-5 h-5 mr-2 lucide"></i>
             Cuentas
           </button>
         </div>
@@ -72,15 +77,15 @@
                 <div class="mb-6">
                   <button
                     id="btn-add-note-form"
-                    class="flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
+                    class="flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-opacity-75"
                   >
-                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                    <i data-lucide="plus" class="w-4 h-4 mr-2 lucide"></i>
                     Nueva Nota
                   </button>
                 </div>
 
                 <!-- Add/Edit Note Form Container -->
-                <div id="note-form-container" class="hidden bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
+                <div id="note-form-container" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 mb-8 transition-colors duration-300">
                     <!-- Form will be injected here by JS -->
                 </div>
 
@@ -96,15 +101,15 @@
                 <div class="mb-6">
                   <button
                     id="btn-add-account-form"
-                    class="flex items-center px-5 py-2.5 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75"
+                    class="flex items-center px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-opacity-75"
                   >
-                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                    <i data-lucide="plus" class="w-4 h-4 mr-2 lucide"></i>
                     Nueva Cuenta
                   </button>
                 </div>
 
                 <!-- Add/Edit Account Form Container -->
-                <div id="account-form-container" class="hidden bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
+                <div id="account-form-container" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 mb-8 transition-colors duration-300">
                     <!-- Form will be injected here by JS -->
                 </div>
 
@@ -123,8 +128,39 @@
     </div>
     
     <script>
+        // ThemePreference Start
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        function setTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeToggleDarkIcon.classList.remove('hidden');
+                themeToggleLightIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleDarkIcon.classList.add('hidden');
+                themeToggleLightIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'light');
+            }
+            renderLucideIcons();
+        }
+
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            setTheme(true);
+        } else {
+            setTheme(false);
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            setTheme(!document.documentElement.classList.contains('dark'));
+        });
+        // ThemePreference End
+
         // State Variables
-        let currentUserUID = null; // Added to store the current user's UID
+        let currentUserUID = null; 
         let activeTab = 'notes'; 
         let notes = [];
         let isAddingNote = false;
@@ -162,7 +198,9 @@
         const db = firebase.firestore();
 
         function renderLucideIcons() {
-            lucide.createIcons();
+            lucide.createIcons({
+                attrs: { class: ['lucide'] }
+            });
         }
 
         function showToast(message, type = 'success', duration = 3500) {
@@ -172,33 +210,30 @@
             const toastId = 'toast-' + Date.now();
             const toast = document.createElement('div');
             toast.id = toastId;
-            // Base classes for animation and positioning
             toast.className = `p-4 rounded-lg shadow-xl text-sm font-medium text-white transition-all duration-300 ease-in-out transform`;
-
-            let bgColor = 'bg-blue-500'; // Default/info
+            
+            let bgColorClass = 'bg-blue-500 dark:bg-blue-600';
             let icon = 'info';
 
             if (type === 'success') {
-                bgColor = 'bg-green-500';
+                bgColorClass = 'bg-green-500 dark:bg-green-600';
                 icon = 'check-circle';
             } else if (type === 'error') {
-                bgColor = 'bg-red-500';
+                bgColorClass = 'bg-red-500 dark:bg-red-600';
                 icon = 'x-circle';
             }
-            toast.classList.add(bgColor);
+            toast.classList.add(...bgColorClass.split(' ')); 
             
             toast.innerHTML = `
                 <div class="flex items-center">
-                    <i data-lucide="${icon}" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <i data-lucide="${icon}" class="w-5 h-5 mr-3 flex-shrink-0 lucide"></i>
                     <span>${message}</span>
                 </div>
             `;
             
-            // Prepend so new toasts appear on top
             toastContainer.prepend(toast);
             renderLucideIcons(); 
 
-            // Animate in (slide down and fade in)
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(-20px)';
             requestAnimationFrame(() => {
@@ -208,14 +243,13 @@
 
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'scale(0.9)'; // Optional: shrink on exit
-                toast.style.marginBottom = `-${toast.offsetHeight}px`; // Collapse space
+                toast.style.transform = 'scale(0.9)';
+                toast.style.marginBottom = `-${toast.offsetHeight}px`;
                 setTimeout(() => {
                     toast.remove();
                 }, 300); 
             }, duration);
         }
-
 
         // Notes Functions
         async function addNote() {
@@ -231,7 +265,7 @@
             };
             try {
                 await db.collection('notes').add(noteToAdd);
-                showToast('Nota agregada exitosamente!');
+                showToast('Nota agregada exitosamente.');
                 newNote = { title: '', content: '', category: 'general' };
                 isAddingNote = false;
                 await loadNotes(); 
@@ -256,7 +290,7 @@
             }; 
             try {
                 await db.collection('notes').doc(editingNote.id).update(noteToUpdate);
-                showToast('Nota actualizada!');
+                showToast('Nota actualizada exitosamente.');
                 editingNote = null;
                 await loadNotes(); 
             } catch (error) {
@@ -271,9 +305,12 @@
                 showToast('Error: ID de nota inválido para eliminar.', 'error');
                 return;
             }
+            if (!confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
+                 return;
+            }
             try {
                 await db.collection('notes').doc(id).delete();
-                showToast('Nota eliminada.');
+                showToast('Nota eliminada exitosamente.');
                 if (editingNote && editingNote.id === id) {
                     editingNote = null; 
                 }
@@ -287,7 +324,7 @@
         
         async function loadNotes() {
             if (activeTab === 'notes' && notesList) {
-                 notesList.innerHTML = `<div class="col-span-full text-center p-6"><p class="text-gray-500 text-lg animate-pulse">Cargando notas...</p></div>`;
+                 notesList.innerHTML = `<div class="col-span-full text-center p-6"><p class="text-gray-500 dark:text-gray-400 text-lg animate-pulse">Cargando notas...</p></div>`;
             }
             try {
                 const snapshot = await db.collection('notes').orderBy('updatedAt', 'desc').get();
@@ -308,7 +345,7 @@
             renderApp();
         }
 
-        // Accounts Functions
+        // Accounts Functions (with Spanish translations)
         async function addAccount() {
             if (!newAccount.name.trim()) {
                  showToast('El nombre de la cuenta no puede estar vacío.', 'error');
@@ -318,7 +355,7 @@
             const accountToAdd = {
                 name: newAccount.name,
                 totalDebt: Number(newAccount.totalDebt) || 0,
-                totalPaid: 0, // New accounts start with 0 paid
+                totalPaid: 0, 
                 description: newAccount.description || '',
                 payments: [], 
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -326,7 +363,7 @@
             };
             try {
                 await db.collection('accounts').add(accountToAdd);
-                showToast('Cuenta agregada exitosamente!');
+                showToast('Cuenta agregada exitosamente.');
                 newAccount = { name: '', totalDebt: 0, totalPaid: 0, description: '', payments: [] };
                 isAddingAccount = false;
                 await loadAccounts(); 
@@ -351,7 +388,7 @@
             };
             try {
                 await db.collection('accounts').doc(editingAccount.id).update(accountToUpdate);
-                showToast('Cuenta actualizada!');
+                showToast('Cuenta actualizada exitosamente.');
                 editingAccount = null;
                 await loadAccounts(); 
             } catch (error) {
@@ -366,9 +403,12 @@
                 showToast('Error: ID de cuenta inválido para eliminar.', 'error');
                 return;
             }
+            if (!confirm('¿Estás seguro de que quieres eliminar esta cuenta y todos sus pagos? Esta acción no se puede deshacer.')) {
+                return;
+            }
             try {
                 await db.collection('accounts').doc(id).delete();
-                showToast('Cuenta eliminada.');
+                showToast('Cuenta eliminada exitosamente.');
                 if (editingAccount && editingAccount.id === id) {
                     editingAccount = null;
                 }
@@ -387,10 +427,10 @@
                 const amountInput = document.getElementById(`payment-amount-${accountId}`);
                 if(amountInput) {
                     amountInput.focus();
-                    amountInput.classList.add('border-red-500', 'ring-red-500');
-                    setTimeout(() => amountInput.classList.remove('border-red-500', 'ring-red-500'), 2000);
+                    amountInput.classList.add('border-red-500', 'dark:border-red-400', 'ring-red-500', 'dark:ring-red-400');
+                    setTimeout(() => amountInput.classList.remove('border-red-500', 'dark:border-red-400', 'ring-red-500', 'dark:ring-red-400'), 2000);
                 }
-                return; // Don't renderApp here, let the focus and border be the feedback
+                return;
             }
              if (!accountId) {
                 showToast('Error: ID de cuenta inválido para agregar pago.', 'error');
@@ -402,7 +442,7 @@
                 await db.runTransaction(async (transaction) => {
                     const accountDoc = await transaction.get(accountRef);
                     if (!accountDoc.exists) {
-                        throw "Account document does not exist!";
+                        throw "El documento de la cuenta no existe.";
                     }
                     const accountData = accountDoc.data();
                     const newPayment = {
@@ -419,18 +459,21 @@
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 });
-                showToast('Pago agregado!');
+                showToast('Pago agregado exitosamente.');
                 await loadAccounts(); 
             } catch (error) {
                 console.error("Error adding payment: ", error);
-                showToast('Error al agregar pago.', 'error');
-                renderApp(); // Re-render on error to ensure UI consistency if needed
+                showToast('Error al agregar pago. ' + error, 'error');
+                renderApp();
             }
         }
 
         async function deletePayment(accountId, paymentId) {
             if (!accountId || !paymentId) {
-                showToast('Error: IDs inválidos para eliminar pago.', 'error');
+                showToast('Error: IDs inválidos para eliminar el pago.', 'error');
+                return;
+            }
+             if (!confirm('¿Estás seguro de que quieres eliminar este pago? Esta acción no se puede deshacer.')) {
                 return;
             }
             const accountRef = db.collection('accounts').doc(accountId);
@@ -438,7 +481,7 @@
                 await db.runTransaction(async (transaction) => {
                     const accountDoc = await transaction.get(accountRef);
                     if (!accountDoc.exists) {
-                        throw "Account document does not exist!";
+                        throw "El documento de la cuenta no existe.";
                     }
                     const accountData = accountDoc.data();
                     const paymentToDelete = (accountData.payments || []).find(p => p.id === paymentId);
@@ -457,18 +500,18 @@
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 });
-                showToast('Pago eliminado.');
+                showToast('Pago eliminado exitosamente.');
                 await loadAccounts(); 
             } catch (error) {
                 console.error("Error deleting payment: ", error);
-                showToast('Error al eliminar el pago.', 'error');
+                showToast('Error al eliminar el pago. ' + error, 'error');
                 renderApp();
             }
         }
 
         async function loadAccounts() {
             if (activeTab === 'accounts' && accountsList) {
-                accountsList.innerHTML = `<div class="col-span-full text-center p-6"><p class="text-gray-500 text-lg animate-pulse">Cargando cuentas...</p></div>`;
+                accountsList.innerHTML = `<div class="col-span-full text-center p-6"><p class="text-gray-500 dark:text-gray-400 text-lg animate-pulse">Cargando cuentas...</p></div>`;
             }
             try {
                 const snapshot = await db.collection('accounts').orderBy('updatedAt', 'desc').get();
@@ -489,40 +532,38 @@
             }
             renderApp();
         }
-
-        // Helper Functions (getAccountStatus, getCategoryColor - already good)
+        
         function getAccountStatus(account) {
             const remaining = (account.totalDebt || 0) - (account.totalPaid || 0);
-            if (account.totalDebt > 0 && remaining <= 0) return 'paid';
-            if ((account.totalPaid || 0) > 0 && (account.totalDebt || 0) > 0) return 'partial'; // Ensure there's debt for partial
-            return 'pending';
+            if (account.totalDebt > 0 && remaining <= 0) return 'pagada'; // Traducido
+            if ((account.totalPaid || 0) > 0 && (account.totalDebt || 0) > 0) return 'parcial'; // Traducido
+            return 'pendiente'; // Traducido
         }
 
         function getCategoryColor(category) {
             const colors = {
-                general: 'bg-gray-100 text-gray-800 border border-gray-300', 
-                trabajo: 'bg-blue-100 text-blue-800 border border-blue-300',
-                personal: 'bg-green-100 text-green-800 border border-green-300',
-                importante: 'bg-red-100 text-red-800 border border-red-300', 
-                ideas: 'bg-purple-100 text-purple-800 border border-purple-300'
+                general:    'bg-gray-200 text-gray-800 border border-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
+                trabajo:    'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700',
+                personal:   'bg-green-100 text-green-800 border border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700',
+                importante: 'bg-red-100 text-red-800 border border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700',
+                ideas:      'bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-900 dark:text-purple-200 dark:border-purple-700'
             };
             return colors[category] || colors.general;
         }
         
-        // --- Rendering Functions ---
         function renderApp() {
             renderTabs();
             renderNoteForm();
             renderNotes();
             renderAccountForm();
             renderAccounts();
-            renderEmptyState(); // Must be after notes/accounts render to check lengths
+            renderEmptyState();
             renderLucideIcons(); 
         }
         
         function renderTabs() {
-            const activeClasses = ['bg-blue-600', 'text-white', 'shadow-md'];
-            const inactiveClasses = ['bg-white', 'text-gray-700', 'hover:bg-gray-100', 'hover:text-blue-600'];
+            const activeClasses = ['bg-blue-600', 'dark:bg-blue-500', 'text-white', 'dark:text-white', 'shadow-md'];
+            const inactiveClasses = ['bg-white', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'hover:text-blue-600', 'dark:hover:text-blue-400'];
 
             if (activeTab === 'notes') {
                 tabNotes.classList.add(...activeClasses);
@@ -547,25 +588,25 @@
                 const currentData = editingNote || newNote;
                 const isEditMode = !!editingNote;
                 noteFormContainer.innerHTML = `
-                    <h3 class="text-xl font-semibold mb-6 text-gray-800">${isEditMode ? 'Editar Nota' : 'Nueva Nota'}</h3>
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-200">${isEditMode ? 'Editar Nota' : 'Nueva Nota'}</h3>
                     <div class="space-y-5">
                         <div>
-                            <label for="note-title-input" class="block text-sm font-medium text-gray-700 mb-1">Título</label>
-                            <input type="text" id="note-title-input" placeholder="Título de la nota" value="${currentData.title}" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"/>
+                            <label for="note-title-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
+                            <input type="text" id="note-title-input" placeholder="Título de la nota" value="${currentData.title}" class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-shadow"/>
                         </div>
                         <div>
-                            <label for="note-category-select" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                            <select id="note-category-select" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">
+                            <label for="note-category-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
+                            <select id="note-category-select" class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-shadow">
                                 ${categories.map(cat => `<option value="${cat}" ${currentData.category === cat ? 'selected' : ''}>${cat.charAt(0).toUpperCase() + cat.slice(1)}</option>`).join('')}
                             </select>
                         </div>
                         <div>
-                            <label for="note-content-input" class="block text-sm font-medium text-gray-700 mb-1">Contenido</label>
-                            <textarea id="note-content-input" placeholder="Contenido de la nota" rows="6" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">${currentData.content}</textarea>
+                            <label for="note-content-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contenido</label>
+                            <textarea id="note-content-input" placeholder="Contenido de la nota" rows="6" class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-shadow">${currentData.content}</textarea>
                         </div>
                         <div class="flex space-x-3 pt-3">
-                            <button id="btn-save-note" class="flex items-center justify-center px-5 py-2.5 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75"><i data-lucide="save" class="w-4 h-4 mr-2"></i>Guardar</button>
-                            <button id="btn-cancel-note" class="flex items-center justify-center px-5 py-2.5 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"><i data-lucide="x" class="w-4 h-4 mr-2"></i>Cancelar</button>
+                            <button id="btn-save-note" class="flex items-center justify-center px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-opacity-75"><i data-lucide="save" class="w-4 h-4 mr-2 lucide"></i>Guardar</button>
+                            <button id="btn-cancel-note" class="flex items-center justify-center px-5 py-2.5 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 focus:ring-opacity-50"><i data-lucide="x" class="w-4 h-4 mr-2 lucide"></i>Cancelar</button>
                         </div>
                     </div>`;
                 document.getElementById('note-title-input').addEventListener('input', (e) => { if (isEditMode) editingNote.title = e.target.value; else newNote.title = e.target.value; });
@@ -580,27 +621,27 @@
         }
 
         function renderNotes() {
-            if (!notesList) return; // Guard clause
+            if (!notesList) return;
             notesList.innerHTML = ''; 
             if (notes.length === 0 && activeTab === 'notes' && !isAddingNote && !editingNote) {
-                // Empty state will be handled by renderEmptyState
-            } else if (activeTab === 'notes') { // Only render if notes tab is active
+                // Empty state handled by renderEmptyState
+            } else if (activeTab === 'notes') {
                 notes.forEach(note => {
                     const noteEl = document.createElement('div');
-                    noteEl.className = 'bg-white rounded-xl shadow-lg p-5 transform hover:shadow-xl hover:-translate-y-1 transition-all duration-200 ease-in-out flex flex-col justify-between';
+                    noteEl.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 transform hover:shadow-xl hover:-translate-y-1 transition-all duration-200 ease-in-out flex flex-col justify-between';
                     noteEl.innerHTML = `
                         <div>
                             <div class="flex justify-between items-start mb-2.5">
-                                <h3 class="font-semibold text-lg text-gray-800 line-clamp-2">${note.title}</h3>
+                                <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200 line-clamp-2">${note.title}</h3>
                                 <div class="flex space-x-1 flex-shrink-0">
-                                    <button data-note-id-edit="${note.id}" class="btn-edit-note p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                                    <button data-note-id-delete="${note.id}" class="btn-delete-note p-1.5 text-gray-500 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <button data-note-id-edit="${note.id}" class="btn-edit-note p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"><i data-lucide="edit-2" class="w-4 h-4 lucide"></i></button>
+                                    <button data-note-id-delete="${note.id}" class="btn-delete-note p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-gray-700 transition-colors"><i data-lucide="trash-2" class="w-4 h-4 lucide"></i></button>
                                 </div>
                             </div>
                             <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-3 ${getCategoryColor(note.category)}">${note.category.charAt(0).toUpperCase() + note.category.slice(1)}</span>
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-3">${note.content}</p>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">${note.content}</p>
                         </div>
-                        <div class="text-xs text-gray-400 border-t border-gray-200 pt-2.5 mt-auto">
+                        <div class="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700 pt-2.5 mt-auto">
                             <p>Creado: ${note.createdAt}</p>
                             ${note.updatedAt !== note.createdAt ? `<p>Actualizado: ${note.updatedAt}</p>` : ''}
                         </div>`;
@@ -615,23 +656,23 @@
                 const currentData = editingAccount || newAccount;
                 const isEditMode = !!editingAccount;
                 accountFormContainer.innerHTML = `
-                    <h3 class="text-xl font-semibold mb-6 text-gray-800">${isEditMode ? 'Editar Cuenta' : 'Nueva Cuenta'}</h3>
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-200">${isEditMode ? 'Editar Cuenta' : 'Nueva Cuenta'}</h3>
                     <div class="space-y-5">
                         <div>
-                            <label for="account-name-input" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la cuenta</label>
-                            <input type="text" id="account-name-input" placeholder="Ej: Tarjeta de Crédito Banco X" value="${currentData.name}" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"/>
+                            <label for="account-name-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre de la cuenta</label>
+                            <input type="text" id="account-name-input" placeholder="Ej: Tarjeta de Crédito Banco X" value="${currentData.name}" class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-shadow"/>
                         </div>
                         <div>
-                            <label for="account-totaldebt-input" class="block text-sm font-medium text-gray-700 mb-1">Total a deber ($)</label>
-                            <input type="number" step="0.01" id="account-totaldebt-input" placeholder="0.00" value="${currentData.totalDebt}" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"/>
+                            <label for="account-totaldebt-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Deuda total ($)</label>
+                            <input type="number" step="0.01" id="account-totaldebt-input" placeholder="0.00" value="${currentData.totalDebt}" class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-shadow"/>
                         </div>
                         <div>
-                            <label for="account-description-input" class="block text-sm font-medium text-gray-700 mb-1">Descripción (opcional)</label>
-                            <textarea id="account-description-input" placeholder="Ej: Compras varias del mes de Mayo" rows="3" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">${currentData.description}</textarea>
+                            <label for="account-description-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción (opcional)</label>
+                            <textarea id="account-description-input" placeholder="Ej: Compras varias del mes de Mayo" rows="3" class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-shadow">${currentData.description}</textarea>
                         </div>
                         <div class="flex space-x-3 pt-3">
-                            <button id="btn-save-account" class="flex items-center justify-center px-5 py-2.5 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75"><i data-lucide="save" class="w-4 h-4 mr-2"></i>Guardar</button>
-                            <button id="btn-cancel-account" class="flex items-center justify-center px-5 py-2.5 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"><i data-lucide="x" class="w-4 h-4 mr-2"></i>Cancelar</button>
+                            <button id="btn-save-account" class="flex items-center justify-center px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-opacity-75"><i data-lucide="save" class="w-4 h-4 mr-2 lucide"></i>Guardar</button>
+                            <button id="btn-cancel-account" class="flex items-center justify-center px-5 py-2.5 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 focus:ring-opacity-50"><i data-lucide="x" class="w-4 h-4 mr-2 lucide"></i>Cancelar</button>
                         </div>
                     </div>`;
                 document.getElementById('account-name-input').addEventListener('input', (e) => { if (isEditMode) editingAccount.name = e.target.value; else newAccount.name = e.target.value; });
@@ -645,61 +686,72 @@
             }
         }
         
+        let paymentHistoryVisibility = {}; 
+        function renderAccountCard(account) {
+            const cardEl = document.createElement('div');
+            const status = getAccountStatus(account); // returns 'pagada', 'parcial', 'pendiente'
+            const remaining = (account.totalDebt || 0) - (account.totalPaid || 0);
+            
+            let statusText = status.charAt(0).toUpperCase() + status.slice(1);
+            if (status === 'pagada') statusText = 'Pagada';
+            else if (status === 'parcial') statusText = 'Pago Parcial';
+            else if (status === 'pendiente') statusText = 'Pendiente';
+
+            const baseColor = status === 'pagada' ? 'green' : status === 'parcial' ? 'yellow' : 'red';
+            const baseColorDark = baseColor; 
+
+            cardEl.className = `bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-${baseColor}-500 dark:border-${baseColorDark}-400 overflow-hidden transition-all duration-200 hover:shadow-xl`;
+            cardEl.innerHTML = `
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 line-clamp-1">${account.name}</h3>
+                            <span class="inline-block px-3 py-0.5 rounded-full text-xs font-semibold 
+                                       bg-${baseColor}-100 text-${baseColor}-700 border border-${baseColor}-300 
+                                       dark:bg-${baseColorDark}-900 dark:text-${baseColorDark}-200 dark:border-${baseColorDark}-700">
+                                ${statusText}
+                            </span>
+                        </div>
+                        <div class="flex space-x-1 flex-shrink-0">
+                            <button data-account-id-edit="${account.id}" class="btn-edit-account p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"><i data-lucide="edit-2" class="w-4 h-4 lucide"></i></button>
+                            <button data-account-id-delete="${account.id}" class="btn-delete-account p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-gray-700 transition-colors"><i data-lucide="trash-2" class="w-4 h-4 lucide"></i></button>
+                        </div>
+                    </div>
+                    ${account.description ? `<p class="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">${account.description}</p>` : ''}
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mb-5">
+                        <div><p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Deuda Total</p><p class="text-lg font-semibold text-gray-800 dark:text-gray-200">$${(account.totalDebt || 0).toFixed(2)}</p></div>
+                        <div><p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Pagado</p><p class="text-lg font-semibold text-blue-600 dark:text-blue-400">$${(account.totalPaid || 0).toFixed(2)}</p></div>
+                        <div><p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Restante</p><p class="text-lg font-semibold text-${baseColor}-600 dark:text-${baseColorDark}-400">$${Math.max(0, remaining).toFixed(2)}</p></div>
+                        <div><p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Progreso</p><p class="text-lg font-semibold text-purple-600 dark:text-purple-400">${(account.totalDebt || 0) > 0 ? (((account.totalPaid || 0) / (account.totalDebt || 0)) * 100).toFixed(0) : ((account.totalPaid || 0) > 0 ? 100 : 0)}%</p></div>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-6"><div class="h-2.5 rounded-full transition-all duration-500 ease-out bg-${baseColor}-500 dark:bg-${baseColorDark}-500" style="width: ${(account.totalDebt || 0) > 0 ? Math.min(((account.totalPaid || 0) / (account.totalDebt || 0)) * 100, 100) : ((account.totalPaid || 0) > 0 ? 100 : 0)}%"></div></div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Registrar Nuevo Pago</h4>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+                            <input type="number" step="0.01" placeholder="Monto del pago" id="payment-amount-${account.id}" class="flex-grow p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-shadow"/>
+                            <input type="text" placeholder="Descripción del pago (opcional)" id="payment-description-${account.id}" class="flex-grow p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-shadow"/>
+                            <button data-account-id-addpayment="${account.id}" class="btn-add-payment flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-md transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-opacity-50"><i data-lucide="dollar-sign" class="w-4 h-4 mr-2 lucide"></i>Pagar</button>
+                        </div>
+                        <button data-account-id-togglepayments="${account.id}" class="btn-toggle-payments text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline flex items-center py-1"><i data-lucide="${paymentHistoryVisibility[account.id] ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4 mr-1.5 lucide"></i>${paymentHistoryVisibility[account.id] ? 'Ocultar' : 'Ver'} Historial de Pagos (${(account.payments || []).length})</button>
+                        <div id="payments-history-${account.id}" class="mt-2.5 space-y-2 ${paymentHistoryVisibility[account.id] ? '' : 'hidden'}">
+                            ${(account.payments && account.payments.length > 0) ? account.payments.slice().reverse().map(payment => `<div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"><div><p class="font-medium text-gray-800 dark:text-gray-200">$${payment.amount.toFixed(2)}</p>${payment.description ? `<p class="text-sm text-gray-600 dark:text-gray-300">${payment.description}</p>` : ''}<p class="text-xs text-gray-500 dark:text-gray-400">${payment.date}</p></div><button data-account-id-deletepayment="${account.id}" data-payment-id="${payment.id}" class="btn-delete-payment p-1.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-md hover:bg-red-50 dark:hover:bg-gray-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4 lucide"></i></button></div>`).join('') : '<p class="text-sm text-gray-500 dark:text-gray-400 py-2 italic">No hay pagos registrados para esta cuenta.</p>'}
+                        </div>
+                    </div>
+                </div>`;
+            return cardEl;
+        }
+        
         function renderAccounts() {
-            if (!accountsList) return; // Guard clause
+            if (!accountsList) return; 
             accountsList.innerHTML = ''; 
             if (accounts.length === 0 && activeTab === 'accounts' && !isAddingAccount && !editingAccount) {
-                // Empty state will be handled by renderEmptyState
-            } else if (activeTab === 'accounts') { // Only render if accounts tab is active
+                // Empty state handled by renderEmptyState
+            } else if (activeTab === 'accounts') { 
                 accounts.forEach(account => {
                     const accountCard = renderAccountCard(account);
                     accountsList.appendChild(accountCard);
                 });
             }
-        }
-
-        let paymentHistoryVisibility = {}; 
-        function renderAccountCard(account) {
-            const cardEl = document.createElement('div');
-            const status = getAccountStatus(account);
-            const remaining = (account.totalDebt || 0) - (account.totalPaid || 0);
-            const baseColor = status === 'paid' ? 'green' : status === 'partial' ? 'yellow' : 'red';
-
-            cardEl.className = `bg-white rounded-xl shadow-lg border-l-4 border-${baseColor}-500 overflow-hidden transition-all duration-200 hover:shadow-xl`;
-            cardEl.innerHTML = `
-                <div class="p-5">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800 line-clamp-1">${account.name}</h3>
-                            <span class="inline-block px-3 py-0.5 rounded-full text-xs font-semibold bg-${baseColor}-100 text-${baseColor}-700 border border-${baseColor}-300">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
-                        </div>
-                        <div class="flex space-x-1 flex-shrink-0">
-                            <button data-account-id-edit="${account.id}" class="btn-edit-account p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                            <button data-account-id-delete="${account.id}" class="btn-delete-account p-1.5 text-gray-500 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>
-                    ${account.description ? `<p class="text-gray-600 text-sm mb-4 line-clamp-2">${account.description}</p>` : ''}
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mb-5">
-                        <div><p class="text-xs text-gray-500 uppercase tracking-wider">Total Deuda</p><p class="text-lg font-semibold text-gray-800">$${(account.totalDebt || 0).toFixed(2)}</p></div>
-                        <div><p class="text-xs text-gray-500 uppercase tracking-wider">Total Pagado</p><p class="text-lg font-semibold text-blue-600">$${(account.totalPaid || 0).toFixed(2)}</p></div>
-                        <div><p class="text-xs text-gray-500 uppercase tracking-wider">Restante</p><p class="text-lg font-semibold text-${baseColor}-600">$${Math.max(0, remaining).toFixed(2)}</p></div>
-                        <div><p class="text-xs text-gray-500 uppercase tracking-wider">Progreso</p><p class="text-lg font-semibold text-purple-600">${(account.totalDebt || 0) > 0 ? (((account.totalPaid || 0) / (account.totalDebt || 0)) * 100).toFixed(0) : ((account.totalPaid || 0) > 0 ? 100 : 0)}%</p></div>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6"><div class="h-2.5 rounded-full transition-all duration-500 ease-out bg-${baseColor}-500" style="width: ${(account.totalDebt || 0) > 0 ? Math.min(((account.totalPaid || 0) / (account.totalDebt || 0)) * 100, 100) : ((account.totalPaid || 0) > 0 ? 100 : 0)}%"></div></div>
-                    <div class="border-t border-gray-200 pt-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Registrar Nuevo Pago</h4>
-                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
-                            <input type="number" step="0.01" placeholder="Monto" id="payment-amount-${account.id}" class="flex-grow p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-shadow"/>
-                            <input type="text" placeholder="Descripción (opcional)" id="payment-description-${account.id}" class="flex-grow p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-shadow"/>
-                            <button data-account-id-addpayment="${account.id}" class="btn-add-payment flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"><i data-lucide="dollar-sign" class="w-4 h-4 mr-2"></i>Pagar</button>
-                        </div>
-                        <button data-account-id-togglepayments="${account.id}" class="btn-toggle-payments text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline flex items-center py-1"><i data-lucide="${paymentHistoryVisibility[account.id] ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4 mr-1.5"></i>${paymentHistoryVisibility[account.id] ? 'Ocultar' : 'Ver'} Historial de Pagos (${(account.payments || []).length})</button>
-                        <div id="payments-history-${account.id}" class="mt-2.5 space-y-2 ${paymentHistoryVisibility[account.id] ? '' : 'hidden'}">
-                            ${(account.payments && account.payments.length > 0) ? account.payments.slice().reverse().map(payment => `<div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm"><div><p class="font-medium text-gray-800">$${payment.amount.toFixed(2)}</p>${payment.description ? `<p class="text-sm text-gray-600">${payment.description}</p>` : ''}<p class="text-xs text-gray-500">${payment.date}</p></div><button data-account-id-deletepayment="${account.id}" data-payment-id="${payment.id}" class="btn-delete-payment p-1.5 text-red-500 hover:text-red-700 rounded-md hover:bg-red-50 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('') : '<p class="text-sm text-gray-500 py-2 italic">No hay pagos registrados.</p>'}
-                        </div>
-                    </div>
-                </div>`;
-            return cardEl;
         }
 
         function renderEmptyState() {
@@ -709,8 +761,11 @@
                 emptyState.classList.remove('hidden');
                 let iconHtml = '';
                 let typeText = activeTab === 'notes' ? 'notas' : 'cuentas';
-                iconHtml = `<i data-lucide="${activeTab === 'notes' ? 'file-text' : 'credit-card'}" class="w-16 h-16 text-gray-400 mb-4"></i>`;
-                emptyState.innerHTML = `<div class="flex flex-col items-center justify-center p-10 bg-white rounded-xl shadow-lg">${iconHtml}<p class="text-gray-600 text-xl font-semibold mb-1">No hay ${typeText} aún.</p><p class="text-gray-500 text-sm">¡Crea la primera para empezar!</p></div>`;
+                let message = activeTab === 'notes' ? 'No hay notas aún.' : 'No hay cuentas aún.';
+                let subMessage = activeTab === 'notes' ? '¡Crea tu primera nota para empezar!' : '¡Crea tu primera cuenta para empezar!';
+
+                iconHtml = `<i data-lucide="${activeTab === 'notes' ? 'file-text' : 'credit-card'}" class="w-16 h-16 text-gray-400 dark:text-gray-500 mb-4 lucide"></i>`;
+                emptyState.innerHTML = `<div class="flex flex-col items-center justify-center p-10 bg-white dark:bg-gray-800 rounded-xl shadow-lg">${iconHtml}<p class="text-gray-600 dark:text-gray-300 text-xl font-semibold mb-1">${message}</p><p class="text-gray-500 dark:text-gray-400 text-sm">${subMessage}</p></div>`;
                 if(iconHtml) renderLucideIcons();
             } else {
                 emptyState.classList.add('hidden');
@@ -720,37 +775,62 @@
         function setupEventListeners() {
             tabNotes.addEventListener('click', () => { activeTab = 'notes'; isAddingNote = false; editingNote = null; isAddingAccount = false; editingAccount = null; renderApp(); });
             tabAccounts.addEventListener('click', () => { activeTab = 'accounts'; isAddingAccount = false; editingAccount = null; isAddingNote = false; editingNote = null; renderApp(); });
-            btnAddNoteForm.addEventListener('click', () => { isAddingNote = true; editingNote = null; newNote = { title: '', content: '', category: 'general' }; renderApp(); noteFormContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => document.getElementById('note-title-input')?.focus(), 150); });
-            btnAddAccountForm.addEventListener('click', () => { isAddingAccount = true; editingAccount = null; newAccount = { name: '', totalDebt: 0, totalPaid: 0, description: '', payments: [] }; renderApp(); accountFormContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => document.getElementById('account-name-input')?.focus(), 150); });
+            
+            btnAddNoteForm.addEventListener('click', () => { 
+                isAddingNote = true; editingNote = null; 
+                newNote = { title: '', content: '', category: 'general' }; 
+                renderApp(); 
+                noteFormContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                setTimeout(() => document.getElementById('note-title-input')?.focus(), 150); 
+            });
+            btnAddAccountForm.addEventListener('click', () => { 
+                isAddingAccount = true; editingAccount = null; 
+                newAccount = { name: '', totalDebt: 0, totalPaid: 0, description: '', payments: [] }; 
+                renderApp(); 
+                accountFormContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                setTimeout(() => document.getElementById('account-name-input')?.focus(), 150); 
+            });
+
             notesList.addEventListener('click', (e) => {
                 const editButton = e.target.closest('.btn-edit-note');
                 const deleteButton = e.target.closest('.btn-delete-note');
                 if (editButton) { const noteId = editButton.dataset.noteIdEdit; const noteToEdit = notes.find(n => n.id === noteId); if (noteToEdit) { editingNote = { ...noteToEdit }; isAddingNote = false; renderApp(); noteFormContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => document.getElementById('note-title-input')?.focus(), 150); } }
-                else if (deleteButton) { const noteId = deleteButton.dataset.noteIdDelete; if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) { deleteNote(noteId); } }
+                else if (deleteButton) { const noteId = deleteButton.dataset.noteIdDelete; deleteNote(noteId); }
             });
+
             accountsList.addEventListener('click', (e) => {
                 const editButton = e.target.closest('.btn-edit-account');
                 const deleteButton = e.target.closest('.btn-delete-account');
                 const addPaymentButton = e.target.closest('.btn-add-payment');
                 const togglePaymentsButton = e.target.closest('.btn-toggle-payments');
                 const deletePaymentButton = e.target.closest('.btn-delete-payment');
+
                 if (editButton) { const accountId = editButton.dataset.accountIdEdit; const accountToEdit = accounts.find(a => a.id === accountId); if (accountToEdit) { editingAccount = { ...accountToEdit }; isAddingAccount = false; renderApp(); accountFormContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => document.getElementById('account-name-input')?.focus(), 150); } }
-                else if (deleteButton) { const accountId = deleteButton.dataset.accountIdDelete; if (confirm('¿Estás seguro de que quieres eliminar esta cuenta y todos sus pagos?')) { deleteAccount(accountId); } }
-                else if (addPaymentButton) { const accountId = addPaymentButton.dataset.accountIdAddpayment; const amountInput = document.getElementById(`payment-amount-${accountId}`); const descriptionInput = document.getElementById(`payment-description-${accountId}`); if (amountInput && descriptionInput && amountInput.value) { addPayment(accountId, amountInput.value, descriptionInput.value); amountInput.value = ''; descriptionInput.value = ''; } else if (amountInput && !amountInput.value) { amountInput.focus(); amountInput.classList.add('border-red-500', 'ring-red-500'); setTimeout(() => amountInput.classList.remove('border-red-500', 'ring-red-500'), 2000); } }
+                else if (deleteButton) { const accountId = deleteButton.dataset.accountIdDelete; deleteAccount(accountId); }
+                else if (addPaymentButton) { 
+                    const accountId = addPaymentButton.dataset.accountIdAddpayment; 
+                    const amountInput = document.getElementById(`payment-amount-${accountId}`); 
+                    const descriptionInput = document.getElementById(`payment-description-${accountId}`); 
+                    if (amountInput && descriptionInput && amountInput.value) { 
+                        addPayment(accountId, amountInput.value, descriptionInput.value); 
+                        amountInput.value = ''; descriptionInput.value = ''; 
+                    } else if (amountInput && !amountInput.value) { 
+                        amountInput.focus(); 
+                        amountInput.classList.add('border-red-500', 'dark:border-red-400', 'ring-red-500', 'dark:ring-red-400'); 
+                        setTimeout(() => amountInput.classList.remove('border-red-500', 'dark:border-red-400', 'ring-red-500', 'dark:ring-red-400'), 2000); 
+                    } 
+                }
                 else if (togglePaymentsButton) { const accountId = togglePaymentsButton.dataset.accountIdTogglepayments; paymentHistoryVisibility[accountId] = !paymentHistoryVisibility[accountId]; renderApp(); }
-                else if (deletePaymentButton) { const accountId = deletePaymentButton.dataset.accountIdDeletepayment; const paymentId = deletePaymentButton.dataset.paymentId; if (confirm('¿Estás seguro de que quieres eliminar este pago?')) { deletePayment(accountId, paymentId); } }
+                else if (deletePaymentButton) { const accountId = deletePaymentButton.dataset.accountIdDeletepayment; const paymentId = deletePaymentButton.dataset.paymentId; deletePayment(accountId, paymentId); }
             });
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             setupEventListeners(); 
-            renderTabs(); // Initial tab styling
-            // Initial data load will show loading messages due to changes in loadNotes/loadAccounts
+            renderTabs(); 
             await Promise.all([loadNotes(), loadAccounts()]);
-            // renderApp() is called within loadNotes and loadAccounts, so UI will be up to date.
+            renderLucideIcons(); 
         });
     </script>
 </body>
 </html>
-
-     
