@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NotasPay</title>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         /* Global Styles & Variables */
         :root {
@@ -606,11 +610,139 @@
         const notesSection = document.getElementById('notes-section');
         const paymentsSection = document.getElementById('payments-section');
 
-        // --- LOCALSTORAGE UTILS ---
-        function saveNotesToLocalStorage() { localStorage.setItem('notes', JSON.stringify(state.notes)); }
-        function loadNotesFromLocalStorage() { const saved = localStorage.getItem('notes'); if (saved) state.notes = JSON.parse(saved); }
-        function savePaymentsToLocalStorage() { localStorage.setItem('payments', JSON.stringify(state.payments)); }
-        function loadPaymentsFromLocalStorage() { const saved = localStorage.getItem('payments'); if (saved) state.payments = JSON.parse(saved); }
+        // Firebase Config & Initialization
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQ-G2ozgY7TJ6VxLn69y6PzagcOn2Qb6U",
+            authDomain: "regiform-lkct3.firebaseapp.com",
+            projectId: "regiform-lkct3",
+            storageBucket: "regiform-lkct3.firebasestorage.app",
+            messagingSenderId: "1028711119142",
+            appId: "1:1028711119142:web:cfc2e2a9996f58ed4469e7"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null; // To store the current user
+
+        // Firebase Auth Function
+        async function signInAnonymouslyIfNeeded() {
+            if (auth.currentUser) {
+                currentUser = auth.currentUser;
+                console.log("User already signed in:", currentUser.uid);
+                return currentUser;
+            }
+            try {
+                const userCredential = await auth.signInAnonymously();
+                currentUser = userCredential.user;
+                console.log("Signed in anonymously:", currentUser.uid);
+                return currentUser;
+            } catch (error) {
+                console.error("Anonymous sign-in error:", error);
+                alert("Could not sign in. Some features might not work. Data will be local.");
+                return null;
+            }
+        }
+
+        // --- FIREBASE DATA FUNCTIONS ---
+        async function loadNotesFromFirestore() {
+            if (!currentUser) {
+                console.warn("No user signed in, cannot load notes from Firestore. Using LocalStorage.");
+                loadNotesFromLocalStorage(); // Fallback
+                return;
+            }
+            try {
+                const docRef = db.collection('users').doc(currentUser.uid).collection('appData').doc('notesDoc');
+                const docSnap = await docRef.get();
+                if (docSnap.exists) {
+                    state.notes = docSnap.data().notesArray || [];
+                    console.log("Notes loaded from Firestore.");
+                } else {
+                    console.log("No notes document found in Firestore for this user, starting fresh.");
+                    state.notes = []; 
+                }
+            } catch (error) {
+                console.error("Error loading notes from Firestore:", error);
+                alert("Error al cargar notas desde la nube. Se usarán datos locales si existen.");
+                loadNotesFromLocalStorage(); // Fallback on error
+            }
+        }
+
+        async function loadPaymentsFromFirestore() {
+            if (!currentUser) {
+                console.warn("No user signed in, cannot load payments from Firestore. Using LocalStorage.");
+                loadPaymentsFromLocalStorage(); // Fallback
+                return;
+            }
+            try {
+                const docRef = db.collection('users').doc(currentUser.uid).collection('appData').doc('paymentsDoc');
+                const docSnap = await docRef.get();
+                if (docSnap.exists) {
+                    state.payments = docSnap.data().paymentsArray || [];
+                    console.log("Payments loaded from Firestore.");
+                } else {
+                    console.log("No payments document found in Firestore for this user, starting fresh.");
+                    state.payments = [];
+                }
+            } catch (error) {
+                console.error("Error loading payments from Firestore:", error);
+                alert("Error al cargar pagos desde la nube. Se usarán datos locales si existen.");
+                loadPaymentsFromLocalStorage(); // Fallback on error
+            }
+        }
+
+        async function saveNotesToFirestore() {
+            if (!currentUser) {
+                console.warn("No user signed in, saving notes to LocalStorage instead.");
+                saveNotesToLocalStorage(); // Fallback
+                return;
+            }
+            try {
+                const docRef = db.collection('users').doc(currentUser.uid).collection('appData').doc('notesDoc');
+                await docRef.set({ notesArray: state.notes });
+                console.log("Notes saved to Firestore.");
+            } catch (error) {
+                console.error("Error saving notes to Firestore:", error);
+                alert("Error al guardar notas en la nube. Se intentará guardar localmente.");
+                saveNotesToLocalStorage(); // Fallback on error
+            }
+        }
+
+        async function savePaymentsToFirestore() {
+            if (!currentUser) {
+                console.warn("No user signed in, saving payments to LocalStorage instead.");
+                savePaymentsToLocalStorage(); // Fallback
+                return;
+            }
+            try {
+                const docRef = db.collection('users').doc(currentUser.uid).collection('appData').doc('paymentsDoc');
+                await docRef.set({ paymentsArray: state.payments });
+                console.log("Payments saved to Firestore.");
+            } catch (error) {
+                console.error("Error saving payments to Firestore:", error);
+                alert("Error al guardar pagos en la nube. Se intentará guardar localmente.");
+                savePaymentsToLocalStorage(); // Fallback on error
+            }
+        }
+
+        // --- LOCALSTORAGE UTILS (used for theme, tab, and as fallback for data if Firestore fails/no user) ---
+        function saveNotesToLocalStorage() { 
+            console.log("Saving notes to LocalStorage (fallback or if no user)");
+            localStorage.setItem('notes', JSON.stringify(state.notes)); 
+        }
+        function loadNotesFromLocalStorage() { 
+            console.log("Loading notes from LocalStorage (fallback or if no user)");
+            const saved = localStorage.getItem('notes'); 
+            if (saved) state.notes = JSON.parse(saved); else state.notes = [];
+        }
+        function savePaymentsToLocalStorage() { 
+            console.log("Saving payments to LocalStorage (fallback or if no user)");
+            localStorage.setItem('payments', JSON.stringify(state.payments)); 
+        }
+        function loadPaymentsFromLocalStorage() { 
+            console.log("Loading payments from LocalStorage (fallback or if no user)");
+            const saved = localStorage.getItem('payments'); 
+            if (saved) state.payments = JSON.parse(saved); else state.payments = [];
+        }
 
         // --- THEME MANAGEMENT ---
         function applyTheme() {
@@ -688,12 +820,12 @@
         }
         function handleSearchTermChange(v){state.searchTerm=v;renderNotesList();}
         function handleNewNoteChange(f,v){state.newNote[f]=v;}
-        function addNoteHandler(){if(state.newNote.title.trim()||state.newNote.content.trim()){state.notes.unshift({id:Date.now(),title:state.newNote.title.trim()||'Sin título',content:state.newNote.content.trim(),createdAt:new Date().toISOString(),modifiedAt:new Date().toISOString()});state.newNote={title:'',content:''};saveNotesToLocalStorage();renderNotesSection();}}
+        async function addNoteHandler(){if(state.newNote.title.trim()||state.newNote.content.trim()){state.notes.unshift({id:Date.now(),title:state.newNote.title.trim()||'Sin título',content:state.newNote.content.trim(),createdAt:new Date().toISOString(),modifiedAt:new Date().toISOString()});state.newNote={title:'',content:''};await saveNotesToFirestore();renderNotesSection();}}
         function startEditingNoteHandler(id){state.editingNoteId=id;const n=state.notes.find(n=>n.id===id);if(n)state.tempEditingNote={...n};renderNotesList();}
         function handleTempEditChange(f,v){if(state.editingNoteId&&state.tempEditingNote)state.tempEditingNote[f]=v;}
-        function saveNoteEditHandler(id){const i=state.notes.findIndex(n=>n.id===id);if(i!==-1&&state.tempEditingNote)state.notes[i]={...state.tempEditingNote,modifiedAt:new Date().toISOString()};state.editingNoteId=null;state.tempEditingNote=null;saveNotesToLocalStorage();renderNotesList();}
+        async function saveNoteEditHandler(id){const i=state.notes.findIndex(n=>n.id===id);if(i!==-1&&state.tempEditingNote)state.notes[i]={...state.tempEditingNote,modifiedAt:new Date().toISOString()};state.editingNoteId=null;state.tempEditingNote=null;await saveNotesToFirestore();renderNotesList();}
         function cancelNoteEditHandler(){state.editingNoteId=null;state.tempEditingNote=null;renderNotesList();}
-        function deleteNoteHandler(id){const n=state.notes.find(n=>n.id===id);if(confirm(`¿Estás seguro de que quieres eliminar "${n?n.title:'esta nota'}"?`)){state.notes=state.notes.filter(n=>n.id!==id);if(state.editingNoteId===id){state.editingNoteId=null;state.tempEditingNote=null;}saveNotesToLocalStorage();renderNotesList();}}
+        async function deleteNoteHandler(id){const n=state.notes.find(n=>n.id===id);if(confirm(`¿Estás seguro de que quieres eliminar "${n?n.title:'esta nota'}"?`)){state.notes=state.notes.filter(n=>n.id!==id);if(state.editingNoteId===id){state.editingNoteId=null;state.tempEditingNote=null;}await saveNotesToFirestore();renderNotesList();}}
 
         // --- PAYMENTS MODULE ---
         function getPaymentSummary() {
@@ -715,10 +847,10 @@
                 paymentsSection.innerHTML = `
                     <div class="space-y-6">
                         <div id="payment-summary-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="summary-card"><p class="label">Total</p><p class="value total">$${summary.total.toFixed(2)}</p></div>
-                            <div class="summary-card"><p class="label">Pagado</p><p class="value paid">$${summary.paid.toFixed(2)}</p></div>
-                            <div class="summary-card"><p class="label">Restante</p><p class="value remaining">$${summary.remaining.toFixed(2)}</p></div>
-                            <div class="summary-card"><p class="label">Completados</p><p class="value completed">${summary.completed}</p></div>
+                            <div class="summary-card"><p class="label">Total</p><p class="value total">$0.00</p></div>
+                            <div class="summary-card"><p class="label">Pagado</p><p class="value paid">$0.00</p></div>
+                            <div class="summary-card"><p class="label">Restante</p><p class="value remaining">$0.00</p></div>
+                            <div class="summary-card"><p class="label">Completados</p><p class="value completed">0</p></div>
                         </div>
                         <div id="new-payment-form-container" class="card">
                             <h3 class="form-field-title">Nuevo Pago</h3>
@@ -736,18 +868,23 @@
                 document.getElementById('new-payment-totalAmount').addEventListener('input', (e) => handleNewPaymentChange('totalAmount', e.target.value));
                 document.getElementById('new-payment-dueDate').addEventListener('input', (e) => handleNewPaymentChange('dueDate', e.target.value));
                 document.getElementById('add-payment-btn').addEventListener('click', addPaymentHandler);
-            } else {
-                const summaryContainer = document.getElementById('payment-summary-container');
-                if (summaryContainer) {
-                    summaryContainer.querySelector('.total').textContent = `$${summary.total.toFixed(2)}`;
-                    summaryContainer.querySelector('.paid').textContent = `$${summary.paid.toFixed(2)}`;
-                    summaryContainer.querySelector('.remaining').textContent = `$${summary.remaining.toFixed(2)}`;
-                    summaryContainer.querySelector('.completed').textContent = summary.completed;
-                }
-                document.getElementById('new-payment-description').value = state.newPayment.description;
-                document.getElementById('new-payment-totalAmount').value = state.newPayment.totalAmount;
-                document.getElementById('new-payment-dueDate').value = state.newPayment.dueDate;
             }
+            // Update summary values after ensuring elements exist
+            const summaryContainer = document.getElementById('payment-summary-container');
+            if (summaryContainer) {
+                summaryContainer.querySelector('.total').textContent = `$${summary.total.toFixed(2)}`;
+                summaryContainer.querySelector('.paid').textContent = `$${summary.paid.toFixed(2)}`;
+                summaryContainer.querySelector('.remaining').textContent = `$${summary.remaining.toFixed(2)}`;
+                summaryContainer.querySelector('.completed').textContent = summary.completed;
+            }
+            // Update new payment form input values
+            const newPaymentDesc = document.getElementById('new-payment-description');
+            const newPaymentTotal = document.getElementById('new-payment-totalAmount');
+            const newPaymentDue = document.getElementById('new-payment-dueDate');
+            if (newPaymentDesc) newPaymentDesc.value = state.newPayment.description;
+            if (newPaymentTotal) newPaymentTotal.value = state.newPayment.totalAmount;
+            if (newPaymentDue) newPaymentDue.value = state.newPayment.dueDate;
+            
             renderPaymentsList();
             updatePaymentsEmptyState();
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -759,7 +896,7 @@
             const sortedPayments = [...state.payments].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
             listContainer.innerHTML = sortedPayments.map(p => {
                 const progress = p.totalAmount > 0 ? (p.paidAmount / p.totalAmount) * 100 : (p.paidAmount > 0 ? 100 :0);
-                const isCompleted = p.paidAmount >= p.totalAmount && p.totalAmount > 0; // Ensure totalAmount > 0
+                const isCompleted = p.paidAmount >= p.totalAmount && p.totalAmount > 0;
                 const todayDateStr = new Date().toISOString().split('T')[0];
                 const isOverdue = p.dueDate < todayDateStr && !isCompleted;
                 return `
@@ -774,7 +911,7 @@
                             ${!isCompleted?`<div class="flex gap-2 items-center"><input type="number" placeholder="Monto a abonar" class="flex-1 payment-abono-input" data-abono-input-for="${p.id}" onkeydown="handleAbonoKeyDown(event, ${p.id})"/><button class="action-btn payment-abono-btn" onclick="addAbonoHandler(${p.id}, this)">Abonar</button></div>`:''}
                         </div>
                     </div>`;
-            }).join('');
+            }).join(''); 
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
@@ -787,100 +924,74 @@
 
         function handleNewPaymentChange(field, value) { state.newPayment[field] = value; }
 
-        function addPaymentHandler() {
-            const descInput = document.getElementById('new-payment-description'); // Not strictly needed if using state
-            const totalInput = document.getElementById('new-payment-totalAmount'); // Not strictly needed
-            const dueInput = document.getElementById('new-payment-dueDate');       // Not strictly needed
-
-            if (!descInput || !totalInput || !dueInput) { // Should ideally not happen if handler is called
-                // console.error("New payment form inputs not found during addPaymentHandler call!");
-                alert("Error: No se pudieron encontrar los campos del formulario. Intente recargar la página.");
-                return;
-            }
-        
+        async function addPaymentHandler() {
             const desc = state.newPayment.description.trim();
             const totalAmountStr = state.newPayment.totalAmount;
             const total = parseFloat(totalAmountStr);
             const due = state.newPayment.dueDate;
         
             let isValid = true;
-            let validationMessages = []; // Use an array for messages
+            let validationMessages = []; 
         
-            if (!desc) {
-                isValid = false;
-                validationMessages.push("- La descripción es obligatoria.");
-            }
-            if (totalAmountStr.trim() === "" || isNaN(total) || total <= 0) {
-                isValid = false;
-                validationMessages.push("- El monto total debe ser un número positivo.");
-            }
-            if (!due) {
-                isValid = false;
-                validationMessages.push("- La fecha de vencimiento es obligatoria.");
-            }
+            if (!desc) { isValid = false; validationMessages.push("- La descripción es obligatoria."); }
+            if (totalAmountStr.trim() === "" || isNaN(total) || total <= 0) { isValid = false; validationMessages.push("- El monto total debe ser un número positivo.");}
+            if (!due) { isValid = false; validationMessages.push("- La fecha de vencimiento es obligatoria."); }
         
             if (isValid) {
-                state.payments.unshift({
-                    id: Date.now(), 
-                    description: desc, 
-                    totalAmount: total, 
-                    paidAmount: 0,
-                    dueDate: due, 
-                    createdAt: new Date().toISOString()
-                });
+                state.payments.unshift({id: Date.now(), description: desc, totalAmount: total, paidAmount: 0, dueDate: due, createdAt: new Date().toISOString() });
                 state.newPayment = { description: '', totalAmount: '', dueDate: ''}; 
-                savePaymentsToLocalStorage();
+                await savePaymentsToFirestore();
                 renderPaymentsSection(); 
             } else {
                 alert("Por favor, corrija los siguientes errores:\n" + validationMessages.join("\n"));
             }
         }
 
-        function addAbonoHandler(paymentId, buttonElement) {
+        async function addAbonoHandler(paymentId, buttonElement) {
             const inputElement = buttonElement.closest('.flex.gap-2.items-center').querySelector(`input[data-abono-input-for="${paymentId}"]`);
-            if (!inputElement) {
-                // console.error("Abono input not found for payment ID:", paymentId);
-                return;
-            }
+            if (!inputElement) return;
             const amount = parseFloat(inputElement.value);
-            if (isNaN(amount) || amount <= 0) {
-                alert("Ingrese un monto válido para abonar.");
-                inputElement.value = '';
-                return;
-            }
+            if (isNaN(amount) || amount <= 0) { alert("Ingrese un monto válido para abonar."); inputElement.value = ''; return; }
             const payment = state.payments.find(p => p.id === paymentId);
             if (payment) {
                 payment.paidAmount = Math.min(payment.totalAmount, payment.paidAmount + amount);
-                savePaymentsToLocalStorage();
+                await savePaymentsToFirestore();
                 renderPaymentsSection(); 
             }
             inputElement.value = ''; 
         }
         
-        function handleAbonoKeyDown(event, paymentId) {
+        async function handleAbonoKeyDown(event, paymentId) { // Made async as it calls addAbonoHandler
             if (event.key === 'Enter') {
                 const inputElement = event.target;
                 const abonoButton = inputElement.closest('.flex.gap-2.items-center').querySelector('.payment-abono-btn');
-                if (abonoButton) {
-                     addAbonoHandler(paymentId, abonoButton);
-                }
+                if (abonoButton) await addAbonoHandler(paymentId, abonoButton); // Await the call
             }
         }
 
-        function deletePaymentHandler(paymentId) {
+        async function deletePaymentHandler(paymentId) {
             const p = state.payments.find(p => p.id === paymentId);
             if (confirm(`¿Estás seguro de que quieres eliminar el pago "${p ? p.description : 'este pago'}"?`)) {
                 state.payments = state.payments.filter(p => p.id !== paymentId);
-                savePaymentsToLocalStorage();
+                await savePaymentsToFirestore();
                 renderPaymentsSection();
             }
         }
-        function attachPaymentItemListeners() { /* Not currently used due to inline onclicks + keydown */ }
+        function attachPaymentItemListeners() { /* Not currently used */ }
 
         // --- INITIALIZATION ---
-        function init() {
-            loadNotesFromLocalStorage(); 
-            loadPaymentsFromLocalStorage();
+        async function init() {
+            currentUser = await signInAnonymouslyIfNeeded(); 
+            
+            if (currentUser) {
+                console.log(`User ${currentUser.uid} signed in. Loading data from Firestore.`);
+                await loadNotesFromFirestore();
+                await loadPaymentsFromFirestore();
+            } else {
+                console.warn("Anonymous sign-in failed. Using LocalStorage as fallback for data.");
+                loadNotesFromLocalStorage(); 
+                loadPaymentsFromLocalStorage();
+            }
 
             const sDarkMode = localStorage.getItem('darkMode');
             state.darkMode = sDarkMode !== null ? JSON.parse(sDarkMode) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -892,13 +1003,19 @@
             paymentsTabBtn.addEventListener('click', () => setActiveTab('payments'));
             
             document.getElementById('export-data-btn')?.addEventListener('click', () => {
-                const data = {notes:state.notes,payments:state.payments,settings:{darkMode:state.darkMode,activeTab:state.activeTab},exportedAt:new Date().toISOString()};
-                const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+                const dataToExport = {
+                    notes: state.notes,
+                    payments: state.payments,
+                    settings: {darkMode: state.darkMode, activeTab: state.activeTab},
+                    exportedAt: new Date().toISOString(),
+                    ...(currentUser && {userId: currentUser.uid}) 
+                };
+                const blob = new Blob([JSON.stringify(dataToExport,null,2)],{type:'application/json'});
                 const url = URL.createObjectURL(blob), a = document.createElement('a');
                 a.href=url; a.download=`notapay_backup_${new Date().toISOString().split('T')[0]}.json`;
                 document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
             });
-            renderApp();
+            renderApp(); // This will now render with data from Firestore (or localStorage fallback)
         }
         document.addEventListener('DOMContentLoaded', init);
     </script>
